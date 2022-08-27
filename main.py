@@ -1,5 +1,5 @@
 import pjsua2 as pj
-import time5
+import time
 
 # Subclass to extend the Account and get notifications etc.
 class Account(pj.Account):
