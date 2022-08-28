@@ -7,6 +7,7 @@ class Account(pj.Account):
       print("***OnRegState: " + prm.reason)
 
 # pjsua2 test function
+# test
 def pjsua2_test():
   # Create and initialize the library
   ep_cfg = pj.EpConfig()
