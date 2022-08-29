@@ -1,41 +1,32 @@
-import pjsua2 as pj
-import time
+import asyncio
+import datetime
+from pjsip_boostupper import pj_set_accounts,pj_set_target,pj_set_wav
 
-# Subclass to extend the Account and get notifications etc.
-class Account(pj.Account):
-  def onRegState(self, prm):
-      print("***OnRegState: " + prm.reason)
+def init_info():
+    target = input()  # + (country_code) XXXXXXXXXXXX (12X)
+    threads = int(input("type how many threads"))
+    speed = int(input("type how many seconds between calls"))
+    ring_duration = int(input("type how many seconds is one call ringing"))
+    attack_duration = datetime.time(int(input("type how long in minutes will be attack going")))  # check if attack less than 12 hours
+    path_to_wav = input("type path to your wav file (if no wav press enter)")
+    return target,threads,speed,ring_duration,attack_duration,path_to_wav
+    
+def main(target,threads,speed,ring_duration,attack_duration,path_to_wav):
+    pj_set_target(target)
+    pj_set_accounts()
+    pj_set_ring_duration(ring_duration)
+    if path_to_wav:
+        pj_set_wav(path_to_wav)
+    # in every thread
+    while datetime.datetime.now() - start_time < attack_duration
+    
+    pass
 
-# pjsua2 test function
-# test1
-def pjsua2_test():
-  # Create and initialize the library
-  ep_cfg = pj.EpConfig()
-  ep = pj.Endpoint()
-  ep.libCreate()
-  ep.libInit(ep_cfg)
 
-  # Create SIP transport. Error handling sample is shown
-  sipTpConfig = pj.TransportConfig();
-  sipTpConfig.port = 5060;
-  ep.transportCreate(pj.PJSIP_TRANSPORT_UDP, sipTpConfig);
-  # Start the library
-  ep.libStart();
 
-  acfg = pj.AccountConfig();
-  acfg.idUri = "sip239888:@sip.novofon.com";
-  acfg.regConfig.registrarUri = "sip:sip.novofon.com";
-  cred = pj.AuthCredInfo("digest", "sip.novofon.com", "239888", 0, "ziduMGNT64");
-  acfg.sipConfig.authCreds.append( cred );
-  # Create the account
-  acc = Account();
-  acc.create(acfg);
-  # Here we don't have anything else to do..
-  time.sleep(10);
 
-  # Destroy the library
-  ep.libDestroy()
 
 
 if __name__ == "__main__":
-  pjsua2_test()
+    # make asyncio cycle
+    main(init_info())
