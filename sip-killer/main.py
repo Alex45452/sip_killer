@@ -2,6 +2,7 @@ import asyncio
 import datetime
 from decorators import time_checker
 from pjsip_boostupper import pj_set_accounts,pj_set_target,pj_set_wav,pj_set_ring_duration
+from call_making import make_call,make_call_with_wav
 
 def init_info():
     target = input()  # + (country_code) XXXXXXXXXXXX (12X)
@@ -13,12 +14,12 @@ def init_info():
     return target,threads,speed,ring_duration,attack_duration,path_to_wav
 
 @time_checker
-def start_attack_with_wav():
-    make_call_with_wav(target)
+def start_attack_with_wav(target,attack_duration,ring_duration,speed):
+    make_call_with_wav(target,ring_duration)
         
 @time_checker
-def start_attack():
-    make_call(target)
+def start_attack(target,attack_duration,ring_duration,speed):
+    make_call(target,ring_duration)
     
 def main(target,threads,speed,ring_duration,attack_duration,path_to_wav):
     pj_set_target(target)
@@ -29,7 +30,7 @@ def main(target,threads,speed,ring_duration,attack_duration,path_to_wav):
         # in every thread'
         start_attack_with_wav(target,attack_duration,ring_duration,speed)
     else:
-        start_attack(target,)
+        start_attack(target,attack_duration,ring_duration,speed)
 
 
 
