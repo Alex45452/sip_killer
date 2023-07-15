@@ -1,10 +1,5 @@
-phone_number = "79150994289"  # Replace with the actual phone number
-sip_domain = "pbx.novofon.com"   # Replace with your SIP provider's domain
-sip_user = "172052-100"   # Replace with your SIP username
-sip_password = "wQsUu0TpH8"  # Replace with your SIP password
 
-
-
+from cfg import *
 
 
 import pjsua2 as pj
