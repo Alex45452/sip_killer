@@ -1,24 +1,6 @@
 **/logs
-/Local Storage
-/Backups
 *.env
-/Cache
-/blob_storage
-/CachedData
-/CachedExtensions
-/Code Cache
-/Crashpad
-/databases
-/Dictionaries
-/GPUCache
-/Service Worker
-/Session Storage
-/User
 Cookies
 *journal
 *.json
-machineid
-Network Persistent State
-Preferences
-QuotaManager
-TransportSecurity
+cfg.py
