@@ -1,64 +1,51 @@
-import sys
-import time
+phone_number = "79150994289"  # Replace with the actual phone number
+sip_domain = "pbx.novofon.com"   # Replace with your SIP provider's domain
+sip_user = "172052-100"   # Replace with your SIP username
+sip_password = "wQsUu0TpH8"  # Replace with your SIP password
+
+
+
+
+
 import pjsua2 as pj
 
-# Replace with your SIP account information and the phone number you want to call
-SIP_USERNAME = "YOUR_SIP_USERNAME"
-SIP_PASSWORD = "YOUR_SIP_PASSWORD"
-SIP_SERVER = "YOUR_SIP_SERVER"
-PHONE_NUMBER = "PHONE_NUMBER"
+# Create an endpoint
+ep = pj.Endpoint()
+ep.libCreate()
 
-class MyCallObserver(pj.Call):
-    def onCallState(self, prm):
-        ci = self.getInfo()
-        print(f"Call with {ci.remoteUri} is {ci.stateText}, last code = {ci.lastStatusCode} ({ci.lastReason})")
+# Initialize the library
+ep_config = pj.EpConfig()
+ep.libInit(ep_config)
 
-        if ci.state == pj.PJSIP_INV_STATE_DISCONNECTED:
-            global call_ended
-            call_ended = True
+# Create a SIP transport
+transport = pj.TransportConfig()
+transport.port = 5060  # Default SIP port
+ep.transportCreate(pj.PJSIP_TRANSPORT_UDP, transport)
 
-class MyAccount(pj.Account):
-    def onIncomingCall(self, prm):
-        print("Incoming call")
+# Start the library
+ep.libStart()
 
-# Create the pjsua lib instance
-lib = pj.Endpoint.instance()
-lib.libCreate()
+# Configure the SIP account
+acc_cfg = pj.AccountConfig()
+acc_cfg.idUri = f"sip:{sip_user}@{sip_domain}"
+acc_cfg.regConfig.registrarUri = f"sip:{sip_domain}"
+cred_info = pj.AuthCredInfo("digest", "*", sip_user, 0, sip_password)
+acc_cfg.sipConfig.authCreds.append(cred_info)
 
-try:
-    # Init the library
-    lib.libInit(log_cfg=pj.LogConfig(level=3))
+# Create the account
+acc = pj.Account()
+acc.create(acc_cfg)
 
-    # Add a UDP transport
-    transport_cfg = pj.TransportConfig()
-    transport_cfg.port = 5060
-    transport_id = lib.transportCreate(pj.PJSIP_TRANSPORT_UDP, transport_cfg)
+# Make a call
+call_prm = pj.CallOpParam()
+call = pj.Call(acc)
+dest_uri = f"sip:{phone_number}@{sip_domain}"
+call.makeCall(dest_uri, call_prm)
 
-    # Start the library
-    lib.libStart()
+# Wait for the call to end
+while call.isActive():
+    pj.Endpoint.instance().libHandleEvents(50)
 
-    # Create an account
-    account_cfg = pj.AccountConfig(domain=SIP_SERVER, username=SIP_USERNAME, password=SIP_PASSWORD)
-    account = MyAccount()
-    account.create(account_cfg)
-
-    # Make a call
-    call = MyCallObserver(account)
-    call_prm = pj.CallOpParam()
-    call_prm.opt.audioCount = 1
-    call_prm.opt.videoCount = 0
-    call.makeCall(f"sip:{PHONE_NUMBER}@{SIP_SERVER}", call_prm)
-
-    # Wait for the call to end
-    call_ended = False
-    while not call_ended:
-        time.sleep(1)
-
-    # Clean up
-    lib.transportClose(transport_id)
-    lib.libDestroy()
-
-except pj.Error as e:
-    print(f"Error: {e}")
-    lib.libDestroy()
-    sys.exit(1)
+# Clean up
+acc.delete()
+ep.libDestroy()
