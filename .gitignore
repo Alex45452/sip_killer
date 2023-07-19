@@ -4,3 +4,5 @@ Cookies
 *journal
 *.json
 cfg.py
+records/*
+__pycache__/*
