@@ -1,69 +1,53 @@
 import pjsua2 as pj
 from cfg import *
-import time
 
 class MyCall(pj.Call):
-    def __init__(self, account):
-        super().__init__(account)
+    def __init__(self, acc, call_id = pj.PJSUA_INVALID_ID):
+        pj.Call.__init__(self, acc, call_id)
 
     def onCallState(self, prm):
-        ci = self.getInfo()
-        print("Call state: ", ci.stateText)
-
-        if ci.state == pj.PJSIP_INV_STATE_DISCONNECTED:
-            # End the call and clean up
-            self.account.delete()
-            pj.Endpoint.instance().libDestroy()
+        print("Call is ", self.getInfo().stateText)
+        print("Last code =", self.getInfo().lastStatusCode)
+        print("(" + self.getInfo().lastReason + ")")
 
     def onCallMediaState(self, prm):
-        ci = self.getInfo()
-        if ci.media[0].status == pj.PJSUA_CALL_MEDIA_ACTIVE:
-            # The call is active, start playing the WAV file
-            player = pj.AudioMediaPlayer()
-            player.createPlayer("/home/aa/test_lida.wav")
-            call_slot = self.getAudioMedia(-1).getPortId()
-            player_slot = player.getPortId()
-            pj.Endpoint.instance().audDevManager().getConfBridge().connectPorts(player_slot, call_slot, 0)
+        if self.getMedia().type == pj.PJMEDIA_TYPE_AUDIO:
+            aud_med = pj.AudioMedia.typecastFromMedia(self.getMedia())
+            pj.Endpoint.instance().audDevManager().getCaptureDevMedia().startTransmit(aud_med)
+            recorder = pj.AudioMediaRecorder()
+            recorder.createRecorder('filename.wav')  # replace 'filename.wav' with your desired filename
+            aud_med.startTransmit(recorder)
 
-    
+class MyAccount(pj.Account):
+    def onIncomingCall(self, prm):
+        call = MyCall(self, prm.callId)
+        call.answer(pj.CallOpParam())
 
-# Create an endpoint
+# Initialise library
 ep = pj.Endpoint()
 ep.libCreate()
 
-# Initialize the library with default Endpoint configuration
-ep_config = pj.EpConfig()
-ep.libInit(ep_config)
+# Initialise transport
+ep.libInit(pj.EpConfig())
 
-# Create a SIP transport
-transport = pj.TransportConfig()
-transport.port = 5060  # Default SIP port
-ep.transportCreate(pj.PJSIP_TRANSPORT_UDP, transport)
+# Create UDP transport.
+tp = ep.transportCreate(pj.TransportType.PJSIP_TRANSPORT_UDP, pj.TransportConfig(5060))
 
-# Start the library
 ep.libStart()
 
-# Configure the SIP account
-acc_cfg = pj.AccountConfig()
-acc_cfg.idUri = f"sip:{sip_user}@{sip_domain}"
-acc_cfg.regConfig.registrarUri = f"sip:{sip_domain}"
-cred_info = pj.AuthCredInfo("digest", "*", sip_user, 0, sip_password)
-acc_cfg.sipConfig.authCreds.append(cred_info)
+# create a SIP account
+account_config = pj.AccountConfig()
+account_config.idUri = f"sip:{sip_user}@{sip_domain}"
+account_config.regConfig.registrarUri = f"sip:{sip_domain}"
+account_config.sipConfig.authCreds.append(pj.AuthCred("digest", "*", sip_user, 0, sip_password))
+acc = pj.create_account(account_config)
 
-# Create the account
-acc = pj.Account()
-acc.create(acc_cfg)
+# Make call
+call_prm = pj.CallOpParam(True)
+call = MyAccount.makeCall(f'sip:{phone_number}', call_prm, MyCall(acc))
 
-# Make a call
-call_prm = pj.CallOpParam()
-call = MyCall(acc)
-dest_uri = f"sip:{phone_number}@{sip_domain}"
-call.makeCall(dest_uri, call_prm)
+# Wait for ENTER before quitting
+print("Press <ENTER> to quit")
+input()
 
-# Wait until the call is disconnected
-while call.isActive():
-    pj.Endpoint.instance().libHandleEvents(50)
-
-# Clean up
-acc.delete()
 ep.libDestroy()
