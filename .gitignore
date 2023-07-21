@@ -4,5 +4,6 @@ Cookies
 *journal
 *.json
 cfg.py
-records/*
-__pycache__/*
+records
+sip-killer/__pycache__
+sip-killer/__pycache__/cfg.cpython-311.pyc
