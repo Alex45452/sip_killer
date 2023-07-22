@@ -1,3 +1,4 @@
+**/__pycache__
 **/logs
 *.env
 Cookies
@@ -5,5 +6,3 @@ Cookies
 *.json
 cfg.py
 records
-sip-killer/__pycache__
-sip-killer/__pycache__/cfg.cpython-311.pyc
